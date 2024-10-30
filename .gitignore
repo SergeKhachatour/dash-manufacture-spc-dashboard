@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+# Created by .ignore support plugin (hsz.mobi)
+### Python template
+>>>>>>> 858ea6a (commit)
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -20,7 +25,10 @@ parts/
 sdist/
 var/
 wheels/
+<<<<<<< HEAD
 share/python-wheels/
+=======
+>>>>>>> 858ea6a (commit)
 *.egg-info/
 .installed.cfg
 *.egg
@@ -39,17 +47,25 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+<<<<<<< HEAD
 .nox/
+=======
+>>>>>>> 858ea6a (commit)
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+<<<<<<< HEAD
 *.py,cover
 .hypothesis/
 .pytest_cache/
 cover/
+=======
+.hypothesis/
+.pytest_cache/
+>>>>>>> 858ea6a (commit)
 
 # Translations
 *.mo
@@ -59,7 +75,10 @@ cover/
 *.log
 local_settings.py
 db.sqlite3
+<<<<<<< HEAD
 db.sqlite3-journal
+=======
+>>>>>>> 858ea6a (commit)
 
 # Flask stuff:
 instance/
@@ -72,12 +91,16 @@ instance/
 docs/_build/
 
 # PyBuilder
+<<<<<<< HEAD
 .pybuilder/
+=======
+>>>>>>> 858ea6a (commit)
 target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
+<<<<<<< HEAD
 # IPython
 profile_default/
 ipython_config.py
@@ -117,6 +140,13 @@ __pypackages__/
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
+=======
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+>>>>>>> 858ea6a (commit)
 
 # SageMath parsed files
 *.sage.py
@@ -142,6 +172,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+<<<<<<< HEAD
 .dmypy.json
 dmypy.json
 
@@ -160,3 +191,8 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+=======
+
+#idea
+.idea/
+>>>>>>> 858ea6a (commit)
