@@ -967,13 +967,14 @@ for param in params[1:]:  # Skip 'Batch' parameter
 # Update piechart callback
 @app.callback(
     Output('piechart', 'figure'),
-    [Input(param + suffix_button_id, 'n_clicks') for param in params[1:]],  # Input from all parameter buttons
+    [Input(param + suffix_button_id, 'n_clicks') for param in params[1:]],
     [State('value-setter-store', 'data')]
 )
 def update_piechart(*args):
-    stored_data = args[-1]  # Last argument is the stored_data State
+    stored_data = args[-1]
     values = []
     colors = []
+    labels = []
     
     for param in params[1:]:
         try:
@@ -981,26 +982,33 @@ def update_piechart(*args):
                 ooc_list = stored_data[param]['ooc']
                 if ooc_list:
                     ooc_param = (ooc_list[-1] * 100) + 1
+                    ooc_percentage = ooc_list[-1] * 100  # Calculate OOC percentage
                 else:
                     ooc_param = 1
+                    ooc_percentage = 0
             else:
                 ooc_param = 1
+                ooc_percentage = 0
+            
             values.append(ooc_param)
             colors.append('rgb(206,0,5)' if ooc_param > 6 else 'rgb(0, 116, 57)')
+            # Add OOC percentage to label
+            labels.append(f"{param} (OOC: {ooc_percentage:.1f}%)")
         except (KeyError, IndexError):
             values.append(1)
             colors.append('rgb(0, 116, 57)')
+            labels.append(f"{param} (OOC: 0.0%)")
 
     return {
         'data': [{
-            'labels': params[1:],
+            'labels': labels,
             'values': values,
             'type': 'pie',
             'marker': {
                 'colors': colors,
                 'line': dict(color='#53555B', width=2)
             },
-            'hoverinfo': 'label',
+            'hovertemplate': "%{label}<br>OOC: %{value:.1f}%<extra></extra>",
             'textinfo': 'label'
         }],
         'layout': {
