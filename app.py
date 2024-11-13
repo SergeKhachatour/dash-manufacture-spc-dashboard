@@ -4,6 +4,9 @@ import pandas as pd
 import copy
 from textwrap import dedent
 import plotly.graph_objects as go
+from openai import AzureOpenAI
+import os
+import logging
 
 app = Dash(
     __name__,
@@ -31,6 +34,60 @@ theme = {
     'secondary': '#FFD15F',  # Accent
 }
 
+# Add logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Configuration constants
+AZURE_OPENAI_ENDPOINT = os.getenv('AZURE_OPENAI_ENDPOINT')
+AZURE_OPENAI_DEPLOYMENT = os.getenv('AZURE_OPENAI_DEPLOYMENT')
+AZURE_OPENAI_API_VERSION = os.getenv('AZURE_OPENAI_API_VERSION', '2024-05-01-preview')
+
+logger.info(f"OpenAI Configuration:")
+logger.info(f"Endpoint: {AZURE_OPENAI_ENDPOINT}")
+logger.info(f"Deployment: {AZURE_OPENAI_DEPLOYMENT}")
+logger.info(f"API Version: {AZURE_OPENAI_API_VERSION}")
+
+# Initialize Azure OpenAI client with error handling
+try:
+    if not all([AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, AZURE_OPENAI_API_VERSION]):
+        raise ValueError("Missing required Azure OpenAI configuration. Please check environment variables.")
+        
+    client = AzureOpenAI(
+        api_key=os.getenv('OPENAI_API_KEY'),
+        api_version=AZURE_OPENAI_API_VERSION,
+        azure_endpoint=AZURE_OPENAI_ENDPOINT
+    )
+    logger.info("Azure OpenAI client initialized successfully")
+    logger.info(f"API Key present: {'Yes' if os.getenv('OPENAI_API_KEY') else 'No'}")
+except Exception as e:
+    logger.error(f"Failed to initialize Azure OpenAI client: {str(e)}")
+    # Instead of raising the error, set client to None
+    client = None
+
+# Modify get_ai_response to handle None client
+def get_ai_response(question):
+    if client is None:
+        return "AI assistant is currently unavailable. Please check your Azure OpenAI configuration."
+        
+    logger.info(f"Sending question to Azure OpenAI: {question}")
+    try:
+        response = client.chat.completions.create(
+            model=AZURE_OPENAI_DEPLOYMENT,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant explaining a manufacturing SPC dashboard."},
+                {"role": "user", "content": question}
+            ],
+            max_tokens=150,
+            temperature=0.7
+        )
+        logger.info("Received response from Azure OpenAI")
+        logger.info(f"Response content: {response.choices[0].message.content}")
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"Error getting AI response: {str(e)}")
+        logger.error(f"Full error details: {repr(e)}")
+        return f"I apologize, but I'm unable to provide an answer at the moment. Error: {str(e)}"
 
 def build_banner():
     return html.Div(
@@ -40,7 +97,7 @@ def build_banner():
             html.H5('Manufacturing SPC Dashboard - Process Control and Exception Reporting'),
             html.Button(
                 id='learn-more-button',
-                children="LEARN MORE",
+                children="AI Assistant",
                 n_clicks=0,
             ),
             html.Img(
@@ -301,18 +358,31 @@ def generate_modal():
                         className='markdown-text',
                         children=dcc.Markdown(
                             children=dedent('''
-                        **What is this mock app about?**
+                        **AI Assistant**
 
-                        'dash-manufacture-spc-dashboard` is a dashboard for monitoring read-time process quality along manufacture production line. 
-
-                        **What does this app shows**
-
-                        Click on buttons in `Parameter' column to visualize details of measurement trendlines on the bottom panel.
-
-                        The Sparkline on top panel and Control chart on bottom panel show Shewhart process monitor using mock data. 
-                        The trend is updated every other second to simulate real-time measurements. Data falling outside of six-sigma control limit are signals indicating 'Out of Control(OOC)', and will 
-                        trigger alerts instantly for a detailed checkup. 
+                        'dash-manufacture-spc-dashboard` is a dashboard for monitoring rea-time process quality along manufacture production line. 
                     '''))
+                    ),
+                    # Add AI Chat Section
+                    html.Div(
+                        className='ai-chat-section',
+                        children=[
+                            html.Hr(),
+                            html.H4("Ask AI Assistant"),
+                            dcc.Input(
+                                id='ai-question-input',
+                                type='text',
+                                placeholder='Ask a question about the dashboard...',
+                                style={'width': '100%', 'marginBottom': '10px'}
+                            ),
+                            html.Button(
+                                'Ask',
+                                id='ai-submit-button',
+                                n_clicks=0,
+                                style={'marginBottom': '10px'}
+                            ),
+                            html.Div(id='ai-response-output')
+                        ]
                     )
                 ]
             )
@@ -1053,6 +1123,19 @@ def update_numeric_inputs(panel_usl, panel_lsl, panel_ucl, panel_lcl, dd_select,
                 stored_data[dd_select]['lcl'])
     
     return no_update, no_update, no_update, no_update
+
+# Add callback for AI chat
+@app.callback(
+    Output('ai-response-output', 'children'),
+    [Input('ai-submit-button', 'n_clicks')],
+    [State('ai-question-input', 'value')],
+    prevent_initial_call=True
+)
+def update_ai_response(n_clicks, question):
+    if n_clicks > 0 and question:
+        response = get_ai_response(question)
+        return dcc.Markdown(response)
+    return ""
 
 # Move app.layout here, after all helper functions are defined
 app.layout = html.Div(
